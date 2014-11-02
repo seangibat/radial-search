@@ -1,0 +1,124 @@
+* {
+  box-sizing:border-box;
+}
+
+html, body, #map-canvas {
+  height: 100%;
+  margin: 0px;
+  padding: 0px
+  font-size: 15px;
+}
+.controls {
+  margin-top: 16px;
+  border: 1px solid transparent;
+  border-radius: 2px 0 0 2px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  height: 32px;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+#pac-input {
+  background-color: #fff;
+  padding: 0 11px 0 13px;
+  width: 400px;
+  font-family: Roboto;
+  font-size: 15px;
+  font-weight: 300;
+  text-overflow: ellipsis;
+}
+
+#radius {
+	background-color: #fff;
+  padding: 2px 11px 2px 13px;
+  width: 60px;
+  font-family: Roboto;
+  font-size: 15px;
+  font-weight: 300;
+  text-overflow: ellipsis;
+}
+
+.fonts {
+  font-family: Roboto;
+  font-size: 15px;
+  font-weight: 300;
+}
+
+#searchSubmit {
+  border:1px solid #EEE;
+  padding: 2px 11px 2px 13px;
+  background-color: #FFF;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+#places, #summaryPlaces {
+  width:150px;
+}
+
+#controlsContainer {
+	position:fixed;
+	top:50px;
+	right:20px;
+	z-index:99;
+  background-color: rgba(255,255,255,0.6);
+  padding:20px;
+}
+
+#pac-input:focus {
+  border-color: #4d90fe;
+  margin-left: -1px;
+  padding-left: 14px;  /* Regular padding-left + 1. */
+  width: 401px;
+}
+
+.pac-container {
+  font-family: Roboto;
+}
+
+#type-selector {
+  color: #fff;
+  background-color: #4d90fe;
+  padding: 5px 11px 0px 11px;
+}
+
+#type-selector label {
+  font-family: Roboto;
+  font-size: 13px;
+  font-weight: 300;
+}
+
+#target {
+  width: 345px;
+}
+
+.infos {
+  opacity:0.65;
+}
+
+#theGuy {
+  opacity: 1.0 !important;
+}
+
+.unopened {
+  line-height:1.35em;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+.opened {
+  width:250px;
+  word-break:break-word;
+}
+
+.minimize, #hiderClicker {
+  cursor:pointer;
+  text-decoration: underline;
+}
+
+#hider {
+  padding:0;
+  margin:0;
+  display: block;
+}
