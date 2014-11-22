@@ -36,7 +36,6 @@ function initialize() {
     if (places.length == 0) {
       return;
     }
-    console.log(places);
     newPosition(places[0].geometry.location);
   });
   // [END region_getplaces]
