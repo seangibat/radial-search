@@ -4,8 +4,10 @@ var homeMarker = null;
 var circle = null;
 var globPosition = null;
 var infowindow = [];
-var markers = []
+var markers = [];
+var allResults = [];
 var zcount = 9999;
+var overlay = new google.maps.OverlayView();
 
 function initialize() {
 
@@ -57,7 +59,6 @@ function initialize() {
 function newPosition(position) {
   globPosition = position;
   map.setCenter(position);
-  map.setZoom(11);
 
   if (homeMarker == null) {
     homeMarker = new google.maps.Marker({
@@ -80,9 +81,10 @@ function newPosition(position) {
       fillColor: '#FFF',
       fillOpacity: 0.3
     });
-
     circle.bindTo('center', homeMarker, 'position');
   }
+
+  map.fitBounds(circle.getBounds());
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);
@@ -98,108 +100,98 @@ function init(){
 }
 
 function search(){
-  var radius = parseFloat(document.getElementById("radius").value) * 1609.34;
-  var opts = document.getElementById('places').selectedOptions;
-  var service = new google.maps.places.PlacesService(map);
+  var radius = parseFloat(document.getElementById("radius").value) * 1609;
   var selectedElements = document.getElementById('places').selectedOptions;
+  var openNow = document.getElementById('open').checked;
+  var keyword = document.getElementById('keyword').value;
+  var placeName = document.getElementById('name').value;
+  var minPrice = document.getElementById('minPriceLevel').value;
+  var maxPrice = document.getElementById('maxPriceLevel').value;
+  var service = new google.maps.places.PlacesService(map);
   var selectedValues = [];
-  for (var i=0;i<selectedElements.length;i++)
+
+  var len = selectedElements.length;
+  for (var i=0;i<len;i++)
     selectedValues.push(selectedElements[i].value)
+
   var request = {
     location: globPosition,
     radius: radius,
     types: selectedValues,
-    openNow: document.getElementById('open').checked
+    openNow: openNow,
+    keyword: keyword,
+    minPriceLevel: minPrice,
+    maxPriceLevel: maxPrice,
+    name: placeName
   };
 
-  for (var i=0;i<infowindow.length;i++) {
-    infowindow[i].close();
-  }
-
-  infowindow = [];
-
   circle.setRadius(radius);
-  if (selectedValues.length != 0)
+  map.fitBounds(circle.getBounds());
+  allResults = [];
+
+  if (selectedValues.length != 0){
+    if (overlay) overlay.setMap();
     service.nearbySearch(request, callback);
+  }
 }
 
 function callback(results, status, pagination) {
   if (status == google.maps.places.PlacesServiceStatus.OK) {
-    for (var i = 0; i < results.length; i++) {
-      createMarker(results[i]);
-    }
+    console.log(results);
+    allResults = allResults.concat(results);
     if (pagination.hasNextPage)
       pagination.nextPage();
+    else
+      d3Callback();
   }
 }
 
-function createMarker(place) {
-  var l = infowindow.push(new google.maps.InfoWindow({'position': place.geometry.location, 'maxWidth':500})) - 1;
-  infowindow[l].setContent("<div class='unopened'>" + place.name + " " + (place.rating ? place.rating : "") + "</div>");
-  infowindow[l].open(map);
-  infowindow[l].cplace = place;
+function d3Callback(){
 
-  google.maps.event.addListenerOnce (infowindow[l],'domready',function(){
-    if (this.H.getContentNode().parentNode.parentNode.parentNode.style.class != 'infos'){
-      this.H.getContentNode().parentNode.parentNode.parentNode.className = 'infos';
-      this.H.getContentNode().parentNode.parentNode.parentNode.addEventListener('click',onMarkClick);
-      this.H.getContentNode().parentNode.parentNode.parentNode.iteration = l;
-    }
-  });
+  // Add the container when the overlay is added to the map.
+  overlay.onAdd = function() {
+    var layer = d3.select(this.getPanes().overlayLayer).append("div")
+        .attr("class", "stations");
 
-  var onMarkClick = function(){      
-    clickedInfoWindow = infowindow[this.iteration];
-    if (this.id != "theGuy"){
+    // Draw each marker as a separate SVG element.
+    // We could use a single SVG, but what size would it have?
+    overlay.draw = function() {
+      var projection = this.getProjection(),
+          padding = 10;
 
-      minimize(null);
-      this.id = "theGuy";
+      var marker = layer.selectAll("svg")
+          .data(allResults)
+          .each(transform) // update existing markers
+        .enter().append("svg:svg")
+          .each(transform)
+          .attr("class", "marker");
 
-      var request = {
-        placeId: clickedInfoWindow.cplace.place_id
+      // Add a circle.
+      marker.append("svg:circle")
+          .attr("r", 4.5)
+          .attr("cx", padding)
+          .attr("cy", padding);
+
+      // Add a label.
+      marker.append("div")
+          .attr("class", "test")
+          // .attr("x", padding + 7)
+          // .attr("y", padding)
+          // .attr("dy", ".31em")
+          .text(function(d) { return d.name; });
+
+      function transform(d) {
+        d = projection.fromLatLngToDivPixel(d.geometry.location);
+        return d3.select(this)
+            .style("left", (d.x - padding) + "px")
+            .style("top", (d.y - padding) + "px");
+      }
+      overlay.onRemove = function(){
+        layer.transition().duration(500).style("opacity",0).remove();
       };
-      var service = new google.maps.places.PlacesService(map);
+    };
+  };
 
-      service.getDetails(request, function(detailPlace, status) {
-        if (status == google.maps.places.PlacesServiceStatus.OK) {
-          clickedInfoWindow.setContent(
-            "<div class='opened'><b>" + 
-            detailPlace.name + "</b><br>" + 
-            ((detailPlace.formatted_phone_number != undefined) ? (detailPlace.formatted_phone_number + "<br>") : "") +
-            ((detailPlace.formatted_address != undefined) ? (detailPlace.formatted_address + "<br>") : "") +
-            ((detailPlace.rating != undefined) ? ("Rating: " + detailPlace.rating + "<br>") : "") +
-            ((detailPlace.price_level != undefined) ? ("Price Level (1-5): " + detailPlace.price_level + "<br>") : "") + 
-            "<p>" + 
-            ((detailPlace.website != undefined) ? ("<a target='_blank' href='" + detailPlace.website + "'>Location Website</a><br>") : "") +
-            "<a target='_blank' href='" + detailPlace.url + "'>Google Places Website</a><br>" +
-            "<a target='_blank' href='https://www.google.com/maps/dir/current+location/" + clickedInfoWindow.cplace.geometry.location.toString().slice(1,-1) + "/'>Navigate</a><br>" +
-            "</p><div class='minimize' id='minimizer'>Minimize</div>" +
-            "</div>"
-          );
-          document.getElementById("minimizer").addEventListener('click',minimize);
-        }
-      });
-      clickedInfoWindow.setZIndex(zcount++);
-    }   
-  }
-}
-
-function minimize(event){
-  if (event != null)
-    event.stopPropagation();
-  var oldElement = document.getElementById('theGuy');
-  if (oldElement != null){
-    oldElement.removeAttribute('id');
-    var oldInfoWindow = infowindow[oldElement.iteration];
-    oldInfoWindow.setContent(oldInfoWindow.cplace.name);
-  }
-}
-
-function minimizePane(){
-  console.log('hey');
-  e = document.getElementById('hider');
-  console.log(e);
-  if(e.style.display == 'block')
-    e.style.display = 'none';
-  else
-    e.style.display = 'block';
+  // Bind our overlay to the map…
+  overlay.setMap(map);
 }

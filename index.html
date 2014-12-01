@@ -3,17 +3,33 @@
   	<head>
 	    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
 	    <meta charset="utf-8">
-	    <title>Radial Search</title>
-	    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
+	    <title>Radial Searches</title>
+	    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
 	    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMw1qrNFOn62lSIw9wGm3zDuT1HNf0X5w&libraries=places"></script>
 	    <script src="main.js"></script>
 	    <link rel="stylesheet" type="text/css" href="style.css">
 	</head>
 	<body>
 		<div id="controlsContainer" class="fonts">
+			<div id="topControlsContainer">
 			<div id="hider" style="display:block;">
 			Open?: <input style="height:1em;" type="checkbox" name="open" value="okay" checked id="open"><br><br>
-			Radius (mi): <input id="radius" placeholder="Radius in Miles" value="5"><br><br>
+			Radius (mi): <input id="radius" placeholder="Radius in Miles" value="2"><br><br>
+			<select size="1" class="fonts" id="minPriceLevel">
+				<option value="0" selected>0</option>
+				<option value="1" selected>1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+				<option value="4">4</option>
+			</select> to 
+			<select size="1" class="fonts" id="maxPriceLevel">
+				<option value="1">$</option>
+				<option value="2">$$</option>
+				<option value="3">$$$</option>
+				<option value="4" selected>$$$$</option>
+			</select><br><br>
+			<input id="name" class="fonts" placeholder="Name (not required)"><br><br>
+			<input id="keyword" class="fonts" placeholder="Keyword (not required)"><br><br>
 
 			<!--<select size="1" class="fonts" id="summaryPlaces">
 				<option value="food">Food</option>
@@ -119,10 +135,12 @@
 			</select><br><br>
 			<div id="searchSubmit" class="fonts">Search</div><br>
 			</div>
-			<div id="hiderClicker" onclick="minimizePane()">Toggle Pane</div>
+			</div>
+
 		</div>
 		<input id="pac-input" class="controls" type="text" placeholder="Search Box">
-		<div id="map-canvas"></div>
+		<div id="map-container"><div id="map-canvas"></div></div>
+		
 		<script>
 		// self executing function here
 		(function() {

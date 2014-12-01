@@ -2,12 +2,47 @@
   box-sizing:border-box;
 }
 
-html, body, #map-canvas {
+html, body {
   height: 100%;
+  width: 100%;
   margin: 0px;
   padding: 0px
   font-size: 15px;
 }
+
+#map-canvas {
+  height: 100%;
+  margin: 0px;
+  padding: 0px
+  font-size: 15px;
+  position: fixed;
+}
+
+#map-container{
+  top:0;left:0;bottom:0;
+  right:200px;
+  position: fixed;
+  margin:0;
+}
+
+.stations, .stations svg {
+  position: absolute;
+}
+
+.stations svg {
+  /*width: 60px;*/
+  height: 20px;
+  padding-right: 100px;
+  font: 14px sans-serif;
+  /*background-color:white;*/
+}
+
+.stations circle {
+  fill: brown;
+  stroke: black;
+  stroke-width: 1.5px;
+}
+
 .controls {
   margin-top: 16px;
   border: 1px solid transparent;
@@ -53,17 +88,29 @@ html, body, #map-canvas {
   border-radius: 5px;
 }
 
-#places, #summaryPlaces {
-  width:150px;
+#places, #summaryPlaces, #keyword, #name {
+  width:100%;
 }
 
 #controlsContainer {
 	position:fixed;
-	top:50px;
-	right:20px;
+	top:0px;
+	right:0px;
+  bottom:0px;
 	z-index:99;
-  background-color: rgba(255,255,255,0.6);
+  background-color: #GGG;
+  width:200px;
+}
+
+#topControlsContainer {
   padding:20px;
+}
+
+#resultsContainer {
+  overflow-y: scroll;
+  overflow-y: hidden;
+
+  
 }
 
 #pac-input:focus {
@@ -121,4 +168,8 @@ html, body, #map-canvas {
   padding:0;
   margin:0;
   display: block;
+}
+
+.test {
+  background-color: white;
 }
