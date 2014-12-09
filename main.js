@@ -141,9 +141,20 @@ function callback(results, status, pagination) {
     allResults = allResults.concat(results);
     if (pagination.hasNextPage)
       pagination.nextPage();
-    else
+    else {
+      populateResults();
       d3Callback();
+    }
   }
+}
+
+var populateResults = function(){
+  var resultsElement = document.getElementById('results');
+  var html = '';
+  allResults.forEach(function(item){
+    html += "<div>" + item.name + "</div>";
+  });
+  resultsElement.innerHTML = html;
 }
 
 function d3Callback(){
@@ -175,9 +186,9 @@ function d3Callback(){
       // Add a label.
       marker.append("div")
           .attr("class", "test")
-          // .attr("x", padding + 7)
-          // .attr("y", padding)
-          // .attr("dy", ".31em")
+          .attr("x", padding + 7)
+          .attr("y", padding)
+          .attr("dy", ".31em")
           .text(function(d) { return d.name; });
 
       function transform(d) {

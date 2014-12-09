@@ -173,3 +173,9 @@ html, body {
 .test {
   background-color: white;
 }
+
+#results {
+  padding: 5px;
+  height: 100%;
+  overflow: scroll;
+}
