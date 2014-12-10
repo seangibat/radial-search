@@ -6,7 +6,7 @@
 	    <title>Radial Search</title>
 	    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
 	    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMw1qrNFOn62lSIw9wGm3zDuT1HNf0X5w&libraries=places"></script>
-	    <script src="main.js"></script>
+	    <script src="modules.js"></script>
 	    <link rel="stylesheet" type="text/css" href="style.css">
 	</head>
 	<body>
@@ -31,7 +31,7 @@
 					<input id="name" class="fonts" placeholder="Name (not required)"><br><br>
 					<input id="keyword" class="fonts" placeholder="Keyword (not required)"><br><br>
 
-					<select size="10" multiple class="fonts" id="places">
+					<select size="8" multiple class="fonts" id="places">
 						<option value="accounting">accounting</option>
 						<option value="airport">airport</option>
 						<option value="aquarium">aquarium</option>
@@ -133,8 +133,9 @@
 
 				</div>
 
-			<div id="results">
-			
+			<div id="resultsContainer">
+				<ul id="results">
+				</ul>
 			</div>
 
 		</div>
@@ -142,9 +143,7 @@
 		<div id="map-container"><div id="map-canvas"></div></div>
 		
 		<script>
-		(function() {
-		   init();
-		})();
+			google.maps.event.addDomListener(window, 'load', Radial.init);
 		</script>
 	</body>
 </html>
