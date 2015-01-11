@@ -141,6 +141,12 @@ html, body {
   opacity:0.65;
 }
 
+.infos:hover {
+  background-color:blue;
+  opacity: 1.0;
+  z-index: 99999999999999 !important;
+}
+
 #theGuy {
   opacity: 1.0 !important;
 }
