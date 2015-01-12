@@ -1,216 +1,210 @@
+var Radial = (function(){
+  var map, homeMarker, circle, overlay, service, selectedPosition, overlay;
+  var resultsContainer, radiusInput, categoriesInput, openCheckbox, keywordInput, zcount = 999999,
+    placeNameInput, minPriceDropdown, maxPriceDropdown, infoWindowTemplate, infoWindows = [];
 
-var map;
-var homeMarker = null;
-var circle = null;
-var globPosition = null;
-var infowindow = [];
-var markers = [];
-var allResults = [];
-var zcount = 9999;
-var resultsElement;
-var idCounter = 0;
-
-
-function initialize() {
-
-  map = new google.maps.Map(document.getElementById('map-canvas'), {
-    mapTypeId: google.maps.MapTypeId.ROADMAP
-  });
-
-  var defaultBounds = new google.maps.LatLngBounds(
-      new google.maps.LatLng(49.9662639,-126.6311303),
-      new google.maps.LatLng(23.0920335,-70.8836669));
-
-  map.fitBounds(defaultBounds);
-
-  // Create the search box and link it to the UI element.
-  var input = /** @type {HTMLInputElement} */(
-      document.getElementById('pac-input'));
-  map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
-
-  var searchBox = new google.maps.places.SearchBox(
-    /** @type {HTMLInputElement} */(input));
-
-  // [START region_getplaces]
-  // Listen for the event fired when the user selects an item from the
-  // pick list. Retrieve the matching places for that item.
-  google.maps.event.addListener(searchBox, 'places_changed', function() {
-    var places = searchBox.getPlaces();
-
-    if (places.length == 0) {
-      return;
-    }
-    newPosition(places[0].geometry.location);
-  });
-  // [END region_getplaces]
-
-  // Try HTML5 geolocation
-  if(navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(position) {
-      var pos = new google.maps.LatLng(position.coords.latitude,
-                                       position.coords.longitude);
-
-      newPosition(pos);
-    }, function() {
-    });
+  var initializeDomVars = function(){
+    resultsContainer = document.getElementById('results');
+    radiusInput = document.getElementById('radius');
+    categoriesInput = document.getElementById('places');
+    openCheckbox = document.getElementById('open');
+    keywordInput = document.getElementById('keyword');
+    placeNameInput = document.getElementById('name');
+    minPriceDropdown = document.getElementById('minPriceLevel');
+    maxPriceDropdown = document.getElementById('maxPriceLevel');
+    infoWindowTemplate = _.template($('#info-window-template').html());
   }
 
-  
-}
+  var initializeMap = function() {
+    var input, searchBox;
 
-function newPosition(position) {
-  globPosition = position;
-  map.setCenter(position);
+    map = new google.maps.Map(document.getElementById('map-canvas'), {
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+    map.fitBounds(new google.maps.LatLngBounds(
+      new google.maps.LatLng(85,-180),
+      new google.maps.LatLng(-85,180)
+    ));
 
-  if (homeMarker == null) {
+    input = (document.getElementById('pac-input'));
+    map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+    searchBox = new google.maps.places.SearchBox(input);
+    google.maps.event.addListener(searchBox, 'places_changed', function() {
+      var places = searchBox.getPlaces();
+      if (places.length > 0) {
+        newPosition(places[0].geometry.location);
+      }
+    });
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var pos = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        newPosition(pos);
+      }, function(){});
+    }
+
+    service = new google.maps.places.PlacesService(map);
+    
+    overlay = new google.maps.OverlayView();
+
     homeMarker = new google.maps.Marker({
       map: map,
-      position: position,
       title: 'Some location'
     });
-  }
-  else {
-    homeMarker.setPosition(position);
-  }
 
-  if (circle == null){
     circle = new google.maps.Circle({
       map: map,
-      radius: document.getElementById('radius').value * 1609,    // 10 miles in metres
+      radius: document.getElementById('radius').value * 1609,
       strokeColor: '#000',
       strokeOpacity: 0.5,
       strokeWeight: 1,
       fillColor: '#FFF',
       fillOpacity: 0.3
     });
-
     circle.bindTo('center', homeMarker, 'position');
   }
 
-  map.fitBounds(circle.getBounds());
-}
+  var init = function(){
+    initializeMap();
+    initializeDomVars();
 
-google.maps.event.addDomListener(window, 'load', initialize);
+    $('#theform').on('submit', searchHandler);
+    $(document).on('click', '.infos', onMarkClick);
+    $(document).on('click', '#selectedInfoWindow a', function(even){
+      event.stopPropagation();
+    });
 
-function init(){
-  resultsElement = document.getElementById('results');
-  document.getElementById("searchSubmit").addEventListener("click", function(){
-    search();
-  });
-  document.getElementById("radius").onkeydown=function(key){
-    if (key.keyCode == 13 && globPosition != null)
-      search();
-  }
-}
-
-function search(){
-  var radius = parseFloat(document.getElementById("radius").value) * 1609.34;
-  var opts = document.getElementById('places').selectedOptions;
-  var service = new google.maps.places.PlacesService(map);
-  var selectedElements = document.getElementById('places').selectedOptions;
-  var selectedValues = [];
-  resultsElement.innerHTML = "";
-  for (var i=0;i<selectedElements.length;i++)
-    selectedValues.push(selectedElements[i].value)
-  var request = {
-    location: globPosition,
-    radius: radius,
-    types: selectedValues,
-    openNow: document.getElementById('open').checked
   };
 
-  for (var i=0;i<infowindow.length;i++) {
-    infowindow[i].close();
+  var newPosition = function(position) {
+    selectedPosition = position;
+    homeMarker.setPosition(position);
+    map.fitBounds(circle.getBounds());
   }
 
-  infowindow = [];
+  var searchHandler = function(e){
+    e.preventDefault();
 
-  circle.setRadius(radius);
-  map.fitBounds(circle.getBounds());
-  if (selectedValues.length != 0)
-    service.nearbySearch(request, callback);
-}
+    $('#loaderGif').show();
 
-function callback(results, status, pagination) {
-  if (status == google.maps.places.PlacesServiceStatus.OK) {
-    for (var i = 0; i < results.length; i++) {
-      // resultsElement.innerHTML += "<div id='result" + ++idCounter + "' class='resultItem'>" + results[i].name + "</div>";
-      // result[i].idd = "result" + idCounter;
-      createMarker(results[i]);
+    infoWindows.forEach(function(infoWindow){
+      infoWindow.close();
+    });
+
+    var radius = parseFloat(radiusInput.value) * 1609;
+    var selectedElements = categoriesInput.selectedOptions;
+    var openNow = openCheckbox.checked;
+    var keyword = keywordInput.value;
+    var placeName = placeNameInput.value;
+    var minPrice = minPriceDropdown.value;
+    var maxPrice = maxPriceDropdown.value;
+    infoWindows = [];
+
+    var selectedValues = [];
+    var len = selectedElements.length;
+    for (var i=0;i<len;i++){
+      selectedValues.push(selectedElements[i].value)
     }
 
-    if (pagination.hasNextPage)
-      pagination.nextPage();
+    var request = {
+      location: selectedPosition,
+      radius: radius,
+      types: selectedValues,
+      openNow: openNow,
+      keyword: keyword,
+      minPriceLevel: minPrice,
+      maxPriceLevel: maxPrice,
+      name: placeName
+    };
+
+    circle.setRadius(radius);
+    map.fitBounds(circle.getBounds());
+
+    var counter = 0;
+
+    var searchResultsCallback = function(results, status, pagination) {
+      if (status == google.maps.places.PlacesServiceStatus.OK) {
+        for (var i = 0; i < results.length; i++){
+          counter++;
+          createMarker(results[i]);
+        }
+        if (pagination.hasNextPage)
+          pagination.nextPage();
+        else {
+          $('#loaderGif').hide();
+          $('#resultNum').text(counter + " results found.")
+        }
+      }
+    }
+
+    if (selectedValues.length != 0){
+      if (overlay) overlay.setMap();  // resets overlay
+      service.nearbySearch(request, searchResultsCallback);
+    }
   }
-}
 
-function createMarker(place) {
-  var l = infowindow.push(new google.maps.InfoWindow({'position': place.geometry.location, 'maxWidth':500})) - 1;
-  infowindow[l].setContent("<div class='unopened'>" + place.name + " " + (place.rating ? place.rating : "") + "</div>");
-  infowindow[l].open(map);
-  infowindow[l].cplace = place;
+  var createMarker = function(place) {
+    var infoWindow = new google.maps.InfoWindow({'position': place.geometry.location, 'maxWidth':500}),
+        spot = infoWindows.length;
+    infoWindow.setContent("<div class='unopened'>" + place.name + " " + (place.rating ? place.rating : "") + "</div>");
+    infoWindow.cplace = place;
+    infoWindow.open(map);
+    infoWindows.push(infoWindow);
 
-  google.maps.event.addListenerOnce (infowindow[l],'domready',function(){
-    if (this.H.getContentNode().parentNode.parentNode.parentNode.style.class != 'infos'){
-      this.H.getContentNode().parentNode.parentNode.parentNode.className = 'infos';
-      this.H.getContentNode().parentNode.parentNode.parentNode.addEventListener('click',onMarkClick);
-      this.H.getContentNode().parentNode.parentNode.parentNode.iteration = l;
-    }
-  });
+    console.log(infoWindows);
+
+
+    google.maps.event.addListenerOnce (infoWindow,'domready',function(){
+      infoWindow.$el = $(this.H.getContentNode()).parent().parent().parent();
+      infoWindow.$el.addClass('infos').data('iteration', spot);
+    });
+  }
+
+
 
   var onMarkClick = function(){      
-    clickedInfoWindow = infowindow[this.iteration];
-    if (this.id != "theGuy"){
+    var clickedInfoWindow = infoWindows[$(this).data('iteration')];
+    if (this.id != "selectedInfoWindow"){
 
-      minimize(null);
-      this.id = "theGuy";
+      minimizeInfoWindow(null);
+      this.id = "selectedInfoWindow";
+      clickedInfoWindow.setZIndex(zcount++);
 
       var request = {
         placeId: clickedInfoWindow.cplace.place_id
       };
-      var service = new google.maps.places.PlacesService(map);
 
       service.getDetails(request, function(detailPlace, status) {
+        console.log(clickedInfoWindow);
         if (status == google.maps.places.PlacesServiceStatus.OK) {
-          clickedInfoWindow.setContent(
-            "<div class='opened'><b>" + 
-            detailPlace.name + "</b><br>" + 
-            ((detailPlace.formatted_phone_number != undefined) ? (detailPlace.formatted_phone_number + "<br>") : "") +
-            ((detailPlace.formatted_address != undefined) ? (detailPlace.formatted_address + "<br>") : "") +
-            ((detailPlace.rating != undefined) ? ("Rating: " + detailPlace.rating + "<br>") : "") +
-            ((detailPlace.price_level != undefined) ? ("Price Level (1-5): " + detailPlace.price_level + "<br>") : "") + 
-            "<p>" + 
-            ((detailPlace.website != undefined) ? ("<a target='_blank' href='" + detailPlace.website + "'>Location Website</a><br>") : "") +
-            "<a target='_blank' href='" + detailPlace.url + "'>Google Places Website</a><br>" +
-            "<a target='_blank' href='https://www.google.com/maps/dir/current+location/" + clickedInfoWindow.cplace.geometry.location.toString().slice(1,-1) + "/'>Navigate</a><br>" +
-            "</p><div class='minimize' id='minimizer'>Minimize</div>" +
-            "</div>"
-          );
-          document.getElementById("minimizer").addEventListener('click',minimize);
+          console.log(detailPlace);
+          clickedInfoWindow.setContent(infoWindowTemplate({
+            detailPlace: detailPlace, 
+            navigationString: clickedInfoWindow.cplace.geometry.location.toString().slice(1,-1) 
+          }));
         }
       });
-      clickedInfoWindow.setZIndex(zcount++);
     }   
+    else {
+      minimizeInfoWindow();
+    }
   }
-}
 
-function minimize(event){
-  if (event != null)
-    event.stopPropagation();
-  var oldElement = document.getElementById('theGuy');
-  if (oldElement != null){
-    oldElement.removeAttribute('id');
-    var oldInfoWindow = infowindow[oldElement.iteration];
-    oldInfoWindow.setContent(oldInfoWindow.cplace.name);
+  var minimizeInfoWindow = function(event){
+    if (event !== null && event !== undefined)
+      event.stopPropagation();
+    var oldElement = document.getElementById('selectedInfoWindow');
+    if (oldElement != null){
+      oldElement.removeAttribute('id');
+      var oldInfoWindow = infoWindows[$(oldElement).data('iteration')];
+      oldInfoWindow.setContent(oldInfoWindow.cplace.name);
+    }
   }
-}
 
-function minimizePane(){
-  console.log('hey');
-  e = document.getElementById('hider');
-  console.log(e);
-  if(e.style.display == 'block')
-    e.style.display = 'none';
-  else
-    e.style.display = 'block';
-}
+  return {
+    init:init,
+    infoWindows: function(){ return infoWindows }
+  }
+
+})();
+

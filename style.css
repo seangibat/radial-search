@@ -1,5 +1,9 @@
-€Ω* {
+div, p, input, form, span {
   box-sizing:border-box;
+}
+
+#loaderGif {
+  display: none;
 }
 
 html, body {
@@ -58,7 +62,7 @@ html, body {
   background-color: #fff;
   padding: 0 11px 0 13px;
   width: 400px;
-  font-family: Roboto;
+  font-family: Roboto,Arial;
   font-size: 15px;
   font-weight: 300;
   text-overflow: ellipsis;
@@ -68,14 +72,14 @@ html, body {
 	background-color: #fff;
   padding: 2px 11px 2px 13px;
   width: 60px;
-  font-family: Roboto;
+  font-family: Roboto,Arial;
   font-size: 15px;
   font-weight: 300;
   text-overflow: ellipsis;
 }
 
 .fonts {
-  font-family: Roboto;
+  font-family: Roboto,Arial;
   font-size: 15px;
   font-weight: 300;
 }
@@ -147,7 +151,7 @@ html, body {
   z-index: 99999999999999 !important;
 }
 
-#theGuy {
+#selectedInfoWindow {
   opacity: 1.0 !important;
 }
 
