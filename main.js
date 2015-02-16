@@ -1,7 +1,7 @@
 var Radial = (function(){
-  var map, homeMarker, circle, overlay, service, selectedPosition, overlay;
+  var map, homeMarker, circle, service, selectedPosition;
   var resultsContainer, radiusInput, categoriesInput, openCheckbox, keywordInput, zcount = 999999,
-    placeNameInput, minPriceDropdown, maxPriceDropdown, infoWindowTemplate, infoWindows = [];
+    placeNameInput, minPriceDropdown, maxPriceDropdown, infoWindowTemplate, infoWindows = [], uid=123;
 
   var initializeDomVars = function(){
     resultsContainer = document.getElementById('results');
@@ -22,8 +22,8 @@ var Radial = (function(){
       mapTypeId: google.maps.MapTypeId.ROADMAP
     });
     map.fitBounds(new google.maps.LatLngBounds(
-      new google.maps.LatLng(85,-180),
-      new google.maps.LatLng(-85,180)
+      new google.maps.LatLng(80,-30),
+      new google.maps.LatLng(-50,60)
     ));
 
     input = (document.getElementById('pac-input'));
@@ -44,9 +44,7 @@ var Radial = (function(){
     }
 
     service = new google.maps.places.PlacesService(map);
-    
     overlay = new google.maps.OverlayView();
-
     homeMarker = new google.maps.Marker({
       map: map,
       title: 'Some location'
@@ -70,9 +68,7 @@ var Radial = (function(){
 
     $('#theform').on('submit', searchHandler);
     $(document).on('click', '.infos', onMarkClick);
-    $(document).on('click', '#selectedInfoWindow a', function(even){
-      event.stopPropagation();
-    });
+    $(document).on('click', '.minimizerr', minimizeInfoWindow);
 
   };
 
@@ -85,6 +81,7 @@ var Radial = (function(){
   var searchHandler = function(e){
     e.preventDefault();
 
+    $('#resultNum').hide();
     $('#loaderGif').show();
 
     infoWindows.forEach(function(infoWindow){
@@ -112,8 +109,8 @@ var Radial = (function(){
       types: selectedValues,
       openNow: openNow,
       keyword: keyword,
-      minPriceLevel: minPrice,
-      maxPriceLevel: maxPrice,
+      // minPriceLevel: minPrice,
+      // maxPriceLevel: maxPrice,
       name: placeName
     };
 
@@ -123,6 +120,11 @@ var Radial = (function(){
     var counter = 0;
 
     var searchResultsCallback = function(results, status, pagination) {
+      if (status === "ZERO_RESULTS") {
+        $('#loaderGif').hide();
+        $('#resultNum').text("No results found.")
+        $('#resultNum').show();
+      }
       if (status == google.maps.places.PlacesServiceStatus.OK) {
         for (var i = 0; i < results.length; i++){
           counter++;
@@ -133,12 +135,12 @@ var Radial = (function(){
         else {
           $('#loaderGif').hide();
           $('#resultNum').text(counter + " results found.")
+          $('#resultNum').show();
         }
       }
     }
 
     if (selectedValues.length != 0){
-      if (overlay) overlay.setMap();  // resets overlay
       service.nearbySearch(request, searchResultsCallback);
     }
   }
@@ -146,16 +148,15 @@ var Radial = (function(){
   var createMarker = function(place) {
     var infoWindow = new google.maps.InfoWindow({'position': place.geometry.location, 'maxWidth':500}),
         spot = infoWindows.length;
-    infoWindow.setContent("<div class='unopened'>" + place.name + " " + (place.rating ? place.rating : "") + "</div>");
+    var uuid = "id" + uid++;
+    infoWindow.setContent("<div id='" + uuid + "' class='unopened'>" + place.name + " " + (place.rating ? place.rating : "") + "</div>");
     infoWindow.cplace = place;
     infoWindow.open(map);
     infoWindows.push(infoWindow);
 
-    console.log(infoWindows);
-
-
     google.maps.event.addListenerOnce (infoWindow,'domready',function(){
-      infoWindow.$el = $(this.H.getContentNode()).parent().parent().parent();
+      console.log($("#" + uuid));
+      infoWindow.$el = $("#" + uuid).parent().parent().parent().parent();
       infoWindow.$el.addClass('infos').data('iteration', spot);
     });
   }
@@ -175,9 +176,7 @@ var Radial = (function(){
       };
 
       service.getDetails(request, function(detailPlace, status) {
-        console.log(clickedInfoWindow);
         if (status == google.maps.places.PlacesServiceStatus.OK) {
-          console.log(detailPlace);
           clickedInfoWindow.setContent(infoWindowTemplate({
             detailPlace: detailPlace, 
             navigationString: clickedInfoWindow.cplace.geometry.location.toString().slice(1,-1) 
@@ -185,9 +184,6 @@ var Radial = (function(){
         }
       });
     }   
-    else {
-      minimizeInfoWindow();
-    }
   }
 
   var minimizeInfoWindow = function(event){
@@ -202,8 +198,7 @@ var Radial = (function(){
   }
 
   return {
-    init:init,
-    infoWindows: function(){ return infoWindows }
+    init:init
   }
 
 })();

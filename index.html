@@ -18,17 +18,18 @@
 						Open?: <input style="height:1em;" type="checkbox" name="open" value="okay" checked id="open"><br><br>
 						Radius (mi): <input id="radius" placeholder="Radius in Miles" value="1"><br><br>
 						<select size="1" class="fonts" id="minPriceLevel">
-							<option value="0" selected>0</option>
-							<option value="1" selected>1</option>
-							<option value="2">2</option>
-							<option value="3">3</option>
-							<option value="4">4</option>
+							<option value="0" selected>$</option>
+							<option value="1">$$</option>
+							<option value="2">$$$</option>
+							<option value="3">$$$$</option>
+							<option value="4">$$$$$</option>
 						</select> to 
 						<select size="1" class="fonts" id="maxPriceLevel">
-							<option value="1">$</option>
-							<option value="2">$$</option>
-							<option value="3">$$$</option>
-							<option value="4" selected>$$$$</option>
+							<option value="0">$</option>
+							<option value="1">$$</option>
+							<option value="2">$$$</option>
+							<option value="3">$$$$</option>
+							<option value="4" selected>$$$$$</option>
 						</select><br><br>
 						<input id="name" class="fonts" placeholder="Name (not required)"><br><br>
 						<input id="keyword" class="fonts" placeholder="Keyword (not required)"><br><br>
@@ -133,7 +134,7 @@
 						<input type="submit" id="searchSubmit" class="fonts">
 					</form>
 					<p id="resultNum"></p>
-					<img src="loader.gif" id="loaderGif">
+					<p><img src="loader.gif" id="loaderGif"></p>
 					</div>
 
 				</div>
@@ -148,13 +149,14 @@
 		<div id="map-container"><div id="map-canvas"></div></div>
 
 		<script id="info-window-template" type="text/template">
+			<span class="minimizerr">_</span>
 			<div class='opened'>
-			<b> <%=detailPlace.name%></b><br> 
-			<%=((detailPlace.formatted_phone_number != undefined) ? (detailPlace.formatted_phone_number + "<br>") : "")%>
+			<b> <%=detailPlace.name%></b><br>
+			<%=((detailPlace.formatted_phone_number != undefined) ? ("<a href='tel:+1" + detailPlace.formatted_phone_number.replace(/[^\d+]/g, "") + "'>" + detailPlace.formatted_phone_number + "</a><br>") : "")%>
 			<%=((detailPlace.formatted_address != undefined) ? (detailPlace.formatted_address + "<br>") : "")%>
 			<%=((detailPlace.rating != undefined) ? ("Rating: " + detailPlace.rating + "<br>") : "")%>
 			<%=((detailPlace.price_level != undefined) ? ("Price Level (1-5): " + detailPlace.price_level + "<br>") : "")%>
-			<p>
+			<p class="itembox-links">
 			<%=((detailPlace.website != undefined) ? ("<a target='_blank' href='" + detailPlace.website + "'>Location Website</a><br>") : "")%>
 			<a target='_blank' href='<%=detailPlace.url%>'>Google Places Website</a><br>
 			<a target='_blank' href='https://www.google.com/maps/dir/current+location/<%=navigationString%>/'>Navigate</a><br>

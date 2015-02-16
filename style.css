@@ -6,6 +6,19 @@ div, p, input, form, span {
   display: none;
 }
 
+.minimizerr {
+  position: absolute;
+  top: -13px;
+  right: 22px;
+  font-size: 25px;
+  font-color: #999;
+  cursor: pointer;
+}
+
+.minimizerr:hover {
+  font-weight: bold;
+}
+
 html, body {
   height: 100%;
   width: 100%;
@@ -197,4 +210,8 @@ html, body {
   padding: 5px;
   border-bottom: 1px solid #FEFEFE;
   background-color: #EEE;
+}
+
+.itembox-links {
+  margin-bottom: 0;
 }
